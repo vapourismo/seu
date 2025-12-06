@@ -1,0 +1,9 @@
+# Direnv
+.direnv
+.envrc.private
+
+# Rust
+target
+
+# Claude
+/.claude/settings.local.json

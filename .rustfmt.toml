@@ -1,0 +1,4 @@
+group_imports = "StdExternalCrate"
+imports_granularity = "Item"
+required_version = "1.9.0"
+style_edition = "2024"

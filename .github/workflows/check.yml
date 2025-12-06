@@ -1,0 +1,54 @@
+name: Check
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_name != 'main' }}
+
+env:
+  RUSTC_WRAPPER: "sccache"
+  SCCACHE_GHA_ENABLED: "on"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - uses: Mozilla-Actions/sccache-action@v0.0.10
+      - uses: actions/cache@v5.0.5
+        with:
+          key: cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.lock', 'flake.lock') }}-v2
+          restore-keys: |
+            cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.lock', 'flake.lock') }}-
+            cargo-${{ runner.os }}-${{ runner.arch }}-
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+      - run: |
+          echo "use flake .#ci" > .envrc
+          nix run .#direnv allow .
+          nix run .#direnv export gha > "$GITHUB_ENV"
+      - run: just fix-cargo-fetch
+      - run: just check
+      - run: just test
+
+  commitlint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: wagoid/commitlint-github-action@v6

@@ -1,0 +1,7 @@
+include = ["**/*.toml"]
+
+[formatting]
+allowed_blank_lines = 1
+indent_string = "    "
+reorder_inline_tables = true
+reorder_keys = true
