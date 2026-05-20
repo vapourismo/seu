@@ -4,7 +4,7 @@ use crate::product::Product;
 /// Marker trait for typ-level Peano numbers
 pub trait Num: Default {
     /// Runtime value for this type-level number
-    const NUM: usize;
+    const NUM: u64;
 }
 
 /// Helper trait for indexing into a product using a type-level number
@@ -27,7 +27,7 @@ pub trait Index<Prod: Product>: Num {
 pub struct Zero;
 
 impl Num for Zero {
-    const NUM: usize = 0;
+    const NUM: u64 = 0;
 }
 
 impl<Head, Tail: Product> Index<Cons<Head, Tail>> for Zero {
@@ -54,7 +54,7 @@ impl<Head, Tail: Product> Index<Cons<Head, Tail>> for Zero {
 pub struct Succ<Pred: Num>(pub Pred);
 
 impl<Pred: Num> Num for Succ<Pred> {
-    const NUM: usize = 1 + Pred::NUM;
+    const NUM: u64 = 1 + Pred::NUM;
 }
 
 impl<Pred, Head, Tail> Index<Cons<Head, Tail>> for Succ<Pred>

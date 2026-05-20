@@ -13,7 +13,7 @@ mod internal_sum_variants {
     pub(super) trait SumVariants: UnionFields {
         unsafe fn drop_variant<TopVariants: UnionFields>(
             untagged_sum: &mut UntaggedSum<TopVariants>,
-            idx: usize,
+            idx: u64,
         );
     }
 
@@ -21,7 +21,7 @@ mod internal_sum_variants {
         #[inline]
         unsafe fn drop_variant<TopVariants: UnionFields>(
             _untagged_sum: &mut UntaggedSum<TopVariants>,
-            _idx: usize,
+            _idx: u64,
         ) {
         }
     }
@@ -30,7 +30,7 @@ mod internal_sum_variants {
         #[inline]
         unsafe fn drop_variant<TopVariants: UnionFields>(
             untagged_sum: &mut UntaggedSum<TopVariants>,
-            idx: usize,
+            idx: u64,
         ) {
             unsafe {
                 if idx == 0 {
@@ -51,7 +51,7 @@ impl<T: internal_sum_variants::SumVariants> SumVariants for T {}
 
 /// Tagged union type
 pub struct Sum<Variants: SumVariants> {
-    index: usize,
+    index: u64,
     untagged_sum: UntaggedSum<Variants>,
 }
 
@@ -116,7 +116,7 @@ mod internal_reducer {
     pub(super) trait Reducer<Variants: SumVariants, Output>: Product {
         unsafe fn reduce<Fields: UnionFields>(
             self,
-            idx: usize,
+            idx: u64,
             untagged_sum: UntaggedSum<Fields>,
         ) -> Output;
     }
@@ -125,7 +125,7 @@ mod internal_reducer {
         #[inline]
         unsafe fn reduce<Fields: UnionFields>(
             self,
-            _idx: usize,
+            _idx: u64,
             _untagged_sum: UntaggedSum<Fields>,
         ) -> Output {
             unreachable!()
@@ -142,7 +142,7 @@ mod internal_reducer {
         #[inline]
         unsafe fn reduce<Fields: UnionFields>(
             self,
-            idx: usize,
+            idx: u64,
             untagged_sum: UntaggedSum<Fields>,
         ) -> Output {
             if idx == 0 {
@@ -157,7 +157,7 @@ mod internal_reducer {
     pub(super) trait ReducerRef<'a, Variants: SumVariants, Output>: Product {
         unsafe fn reduce_ref<Fields: UnionFields>(
             self,
-            idx: usize,
+            idx: u64,
             untagged_sum: &'a UntaggedSum<Fields>,
         ) -> Output;
     }
@@ -166,7 +166,7 @@ mod internal_reducer {
         #[inline]
         unsafe fn reduce_ref<Fields: UnionFields>(
             self,
-            _idx: usize,
+            _idx: u64,
             _untagged_sum: &'a UntaggedSum<Fields>,
         ) -> Output {
             unreachable!()
@@ -184,7 +184,7 @@ mod internal_reducer {
         #[inline]
         unsafe fn reduce_ref<Fields: UnionFields>(
             self,
-            idx: usize,
+            idx: u64,
             untagged_sum: &'a UntaggedSum<Fields>,
         ) -> Output {
             if idx == 0 {
