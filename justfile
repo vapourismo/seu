@@ -4,6 +4,8 @@ alias c := check
 alias t := test
 alias f := fix
 
+export CARGO_TERM_QUIET := "true"
+
 [default]
 [parallel]
 all: check test
