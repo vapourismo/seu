@@ -41,8 +41,10 @@
         ];
 
         ciCommonPackages = with pkgs; [
+          cargo-llvm-cov
           cargo-nextest
           just
+          llvm
           nixfmt
           taplo
         ];
@@ -58,15 +60,21 @@
             nixd
           ]
           ++ ciCommonPackages;
+
+        LLVM_COV = "${pkgs.llvm}/bin/llvm-cov";
+
+        LLVM_PROFDATA = "${pkgs.llvm}/bin/llvm-profdata";
       in
       {
         devShells = {
           ci = pkgs.mkShell {
             packages = ciRustPackages ++ ciCommonPackages;
+            inherit LLVM_COV LLVM_PROFDATA;
           };
 
           default = pkgs.mkShell {
             packages = devRustPackages ++ devCommonPackages;
+            inherit LLVM_COV LLVM_PROFDATA;
           };
         };
 
