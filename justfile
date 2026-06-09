@@ -49,3 +49,9 @@ test: test-nextest
 
 test-nextest:
     cargo nextest run
+
+coverage:
+    cargo llvm-cov test
+
+coverage-report:
+    cargo llvm-cov test --html --open
