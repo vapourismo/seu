@@ -15,15 +15,14 @@ use serde::ser::SerializeStruct;
 use serde::ser::SerializeStructVariant;
 use serde::ser::SerializeTupleStruct;
 use serde::ser::SerializeTupleVariant;
-
-use crate::core::fields::Field;
-use crate::core::fields::FieldsProduct;
-use crate::core::names::HasName;
-use crate::core::names::HasOptionalName;
-use crate::core::names::Unnamed;
-use crate::core::product::Cons;
-use crate::core::product::Nil;
-use crate::core::product::Product;
+use seu_core::fields::Field;
+use seu_core::fields::FieldsProduct;
+use seu_core::names::HasName;
+use seu_core::names::HasOptionalName;
+use seu_core::names::Unnamed;
+use seu_core::product::Cons;
+use seu_core::product::Nil;
+use seu_core::product::Product;
 
 pub trait DeserializeTupleFields<'de>: FieldsProduct + Sized {
     fn deserialize_unit_fields<E: serde::de::Error>() -> Result<Self, E>;

@@ -1,3 +1,7 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
+
 mod fields;
 mod repr;
 mod variants;
@@ -6,10 +10,10 @@ use serde::Deserialize;
 use serde::Deserializer;
 use serde::Serialize;
 use serde::Serializer;
+use seu_core::datatypes::DataType;
 
-use crate::core::datatypes::DataType;
-use crate::serde::repr::DeserializeRepr;
-use crate::serde::repr::SerializeRepr;
+use crate::repr::DeserializeRepr;
+use crate::repr::SerializeRepr;
 
 pub struct SerializeViaSeu<'a, T: DataType + 'a>(pub T::ReprRef<'a>);
 

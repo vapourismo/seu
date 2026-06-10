@@ -10,16 +10,16 @@ use serde::ser::Impossible;
 use serde::ser::SerializeStructVariant;
 use serde::ser::SerializeTupleVariant;
 use serde_json::json;
+use seu::DataType;
 
-use crate::DataType;
-use crate::serde::DeserializeViaSeu;
-use crate::serde::SerializeViaSeu;
-use crate::serde::fields::FieldIdx;
-use crate::serde::variants::VariantIdx;
+use crate::DeserializeViaSeu;
+use crate::SerializeViaSeu;
+use crate::fields::FieldIdx;
+use crate::variants::VariantIdx;
 
 fn deserialize_like<T>(_: &T, value: serde_json::Value) -> T
 where
-    T: crate::core::datatypes::DataType,
+    T: seu_core::datatypes::DataType,
     DeserializeViaSeu<T>: serde::de::DeserializeOwned,
 {
     serde_json::from_value::<DeserializeViaSeu<T>>(value)
@@ -29,7 +29,7 @@ where
 
 fn deserialize<T>(value: serde_json::Value) -> serde_json::Result<T>
 where
-    T: crate::core::datatypes::DataType,
+    T: seu_core::datatypes::DataType,
     DeserializeViaSeu<T>: serde::de::DeserializeOwned,
 {
     serde_json::from_value::<DeserializeViaSeu<T>>(value).map(DeserializeViaSeu::into_data)
@@ -525,23 +525,23 @@ impl SerializeStructVariant for CaptureStructVariant {
 }
 
 #[derive(Debug, PartialEq, DataType, Serialize, Deserialize)]
-#[datatype(crate = crate)]
+#[datatype(crate = seu)]
 struct UnitStruct;
 
 #[derive(Debug, PartialEq, DataType, Serialize, Deserialize)]
-#[datatype(crate = crate)]
+#[datatype(crate = seu)]
 struct EmptyTupleStruct();
 
 #[derive(Debug, PartialEq, DataType, Serialize, Deserialize)]
-#[datatype(crate = crate)]
+#[datatype(crate = seu)]
 struct TupleStruct(u8, bool, String);
 
 #[derive(Debug, PartialEq, DataType, Serialize, Deserialize)]
-#[datatype(crate = crate)]
+#[datatype(crate = seu)]
 struct EmptyNamedStruct {}
 
 #[derive(Debug, PartialEq, DataType, Serialize, Deserialize)]
-#[datatype(crate = crate)]
+#[datatype(crate = seu)]
 struct NamedStruct {
     first: u8,
     second: bool,
@@ -549,14 +549,14 @@ struct NamedStruct {
 }
 
 #[derive(Debug, PartialEq, DataType, Serialize, Deserialize)]
-#[datatype(crate = crate)]
+#[datatype(crate = seu)]
 struct GenericStruct<T> {
     value: T,
     items: Vec<T>,
 }
 
 #[derive(Debug, PartialEq, DataType, Serialize, Deserialize)]
-#[datatype(crate = crate)]
+#[datatype(crate = seu)]
 enum EnumShapes<T> {
     Unit,
     EmptyTuple(),

@@ -1,6 +1,6 @@
 [package]
 edition.workspace = true
-name = "seu"
+name = "seu-serde"
 version.workspace = true
 
 [lints]
@@ -11,5 +11,9 @@ default = ["std"]
 std = []
 
 [dependencies]
+serde.workspace = true
 seu-core.workspace = true
-seu-macros.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+seu.workspace = true

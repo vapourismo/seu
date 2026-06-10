@@ -79,8 +79,6 @@ dependencies = [
 name = "seu"
 version = "0.0.0"
 dependencies = [
- "serde",
- "serde_json",
  "seu-core",
  "seu-macros",
 ]
@@ -97,6 +95,16 @@ dependencies = [
  "quote",
  "seu",
  "syn",
+]
+
+[[package]]
+name = "seu-serde"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "seu",
+ "seu-core",
 ]
 
 [[package]]

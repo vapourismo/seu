@@ -2,7 +2,6 @@
 
 extern crate alloc;
 
-pub mod serde;
 pub use macros::DataType;
 #[doc(hidden)]
 pub use seu_core as core;
