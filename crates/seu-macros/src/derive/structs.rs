@@ -3,6 +3,7 @@ use quote::quote;
 use syn::DataStruct;
 use syn::Expr;
 use syn::Fields;
+use syn::Ident;
 use syn::Type;
 use syn::parse_quote;
 
@@ -14,15 +15,17 @@ use crate::product::product_pat;
 
 /// Generate the struct representation.
 pub fn struct_repr(
+    ident: &Ident,
     data: &DataStruct,
     names: &mut NameGen,
     transform_fields: impl Fn(&Type) -> Type,
 ) -> Type {
     let flavour = variant_flavour(&data.fields, names);
     let fields = fields_repr(&data.fields, names, transform_fields);
+    let name = names.insert(ident);
 
     parse_quote! {
-        ::seu::core::structs::Struct<#flavour, #fields>
+        ::seu::core::structs::Struct<#name, #flavour, #fields>
     }
 }
 

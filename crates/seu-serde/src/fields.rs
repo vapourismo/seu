@@ -83,25 +83,27 @@ where
     }
 }
 
-pub struct TupleFieldsVisitor<Fields> {
-    name: &'static str,
+pub struct TupleFieldsVisitor<Name, Fields> {
+    _name: PhantomData<Name>,
     _fields: PhantomData<Fields>,
 }
 
-impl<Fields> TupleFieldsVisitor<Fields> {
-    pub fn new(name: &'static str) -> Self {
+impl<Name, Fields> TupleFieldsVisitor<Name, Fields> {
+    pub fn new() -> Self {
         Self {
-            name,
+            _name: PhantomData,
             _fields: PhantomData,
         }
     }
 }
 
-impl<'de, Fields: DeserializeTupleFields<'de>> Visitor<'de> for TupleFieldsVisitor<Fields> {
+impl<'de, Name: HasName, Fields: DeserializeTupleFields<'de>> Visitor<'de>
+    for TupleFieldsVisitor<Name, Fields>
+{
     type Value = Fields;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(self.name)
+        formatter.write_str(Name::NAME)
     }
 
     fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<Self::Value, A::Error> {
@@ -207,25 +209,27 @@ where
     }
 }
 
-pub struct StructFieldsVisitor<Fields> {
-    name: &'static str,
+pub struct StructFieldsVisitor<Name, Fields> {
+    _name: PhantomData<Name>,
     _fields: PhantomData<Fields>,
 }
 
-impl<Fields> StructFieldsVisitor<Fields> {
-    pub fn new(name: &'static str) -> Self {
+impl<Name, Fields> StructFieldsVisitor<Name, Fields> {
+    pub fn new() -> Self {
         Self {
-            name,
+            _name: PhantomData,
             _fields: PhantomData,
         }
     }
 }
 
-impl<'de, Fields: DeserializeStructFields<'de>> Visitor<'de> for StructFieldsVisitor<Fields> {
+impl<'de, Name: HasName, Fields: DeserializeStructFields<'de>> Visitor<'de>
+    for StructFieldsVisitor<Name, Fields>
+{
     type Value = Fields;
 
     fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(self.name)
+        formatter.write_str(Name::NAME)
     }
 
     fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>

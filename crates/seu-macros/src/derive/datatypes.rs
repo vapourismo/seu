@@ -2,6 +2,7 @@ use syn::Data;
 use syn::DeriveInput;
 use syn::Error;
 use syn::Expr;
+use syn::Ident;
 use syn::ItemImpl;
 use syn::LitStr;
 use syn::Type;
@@ -18,13 +19,14 @@ use crate::names::NameGen;
 
 /// Generate a type representation for a data type.
 pub fn data_type_repr(
+    ident: &Ident,
     data: &Data,
     names: &mut NameGen,
     transform_fields: impl Fn(&Type) -> Type,
 ) -> Result<Type, Error> {
     Ok(match data {
-        Data::Struct(data_struct) => struct_repr(data_struct, names, transform_fields),
-        Data::Enum(data_enum) => enum_repr(data_enum, names, transform_fields),
+        Data::Struct(data_struct) => struct_repr(ident, data_struct, names, transform_fields),
+        Data::Enum(data_enum) => enum_repr(ident, data_enum, names, transform_fields),
         Data::Union(data_union) => {
             return Err(Error::new(
                 data_union.union_token.span,
@@ -73,9 +75,9 @@ pub fn data_type_impl(item: DeriveInput, names: &mut NameGen) -> Result<ItemImpl
 
     let name_lit = LitStr::new(name.to_string().as_str(), name.span());
 
-    let repr = data_type_repr(&item.data, names, |t| t.clone())?;
-    let repr_ref = data_type_repr(&item.data, names, |t| parse_quote! { &'a #t })?;
-    let repr_mut = data_type_repr(&item.data, names, |t| parse_quote! { &'a mut #t })?;
+    let repr = data_type_repr(name, &item.data, names, |t| t.clone())?;
+    let repr_ref = data_type_repr(name, &item.data, names, |t| parse_quote! { &'a #t })?;
+    let repr_mut = data_type_repr(name, &item.data, names, |t| parse_quote! { &'a mut #t })?;
 
     let to_impl = data_type_to_repr_expr(&item.data, |e| e)?;
     let to_impl_ref = data_type_to_repr_expr(&item.data, |e| parse_quote! { &#e })?;

@@ -3,6 +3,7 @@ use syn::DataEnum;
 use syn::Expr;
 use syn::FieldValue;
 use syn::Fields;
+use syn::Ident;
 use syn::Pat;
 use syn::Type;
 use syn::parse_quote;
@@ -16,6 +17,7 @@ use crate::product::product_ty;
 
 /// Generate the enum type representation.
 pub fn enum_repr(
+    ident: &Ident,
     data: &DataEnum,
     names: &mut NameGen,
     transform_type: impl Fn(&Type) -> Type,
@@ -26,10 +28,11 @@ pub fn enum_repr(
         .enumerate()
         .map(|(idx, var)| variant_repr(idx, var, names, &transform_type));
     let repr = product_ty(variants);
-    let names = names.insert_variants(data.variants.iter());
+    let variant_names = names.insert_variants(data.variants.iter()).clone();
+    let name = names.insert(ident);
 
     parse_quote! {
-        ::seu::core::enums::Enum<#names, #repr>
+        ::seu::core::enums::Enum<#name, #variant_names, #repr>
     }
 }
 

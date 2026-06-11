@@ -8,7 +8,6 @@ use serde::Deserialize;
 use serde::Serializer;
 use serde::de::VariantAccess;
 use serde::de::Visitor;
-use seu_core::datatypes::DataType;
 use seu_core::fields::FieldsProduct;
 use seu_core::names::HasName;
 use seu_core::names::HasNames;
@@ -32,18 +31,14 @@ use crate::fields::SerializeTupleVariantFields;
 use crate::fields::StructFieldsVisitor;
 use crate::fields::TupleFieldsVisitor;
 
-pub trait DeserializeVariants<'de, Parent: DataType, TopVariants: VariantsProduct>:
-    VariantsProduct + Sized
-{
+pub trait DeserializeVariants<'de, TopVariants: VariantsProduct>: VariantsProduct + Sized {
     fn deserialize_variant<A: VariantAccess<'de>>(
         var: VariantIdx,
         access: A,
     ) -> Result<Sum<TopVariants>, A::Error>;
 }
 
-impl<'de, Parent: DataType, TopVariants: VariantsProduct>
-    DeserializeVariants<'de, Parent, TopVariants> for Nil
-{
+impl<'de, TopVariants: VariantsProduct> DeserializeVariants<'de, TopVariants> for Nil {
     fn deserialize_variant<A: VariantAccess<'de>>(
         var: VariantIdx,
         _access: A,
@@ -54,8 +49,7 @@ impl<'de, Parent: DataType, TopVariants: VariantsProduct>
     }
 }
 
-impl<'de, Name, Idx, Flavour, Fields, Tail, Parent, TopVariants>
-    DeserializeVariants<'de, Parent, TopVariants>
+impl<'de, Name, Idx, Flavour, Fields, Tail, TopVariants> DeserializeVariants<'de, TopVariants>
     for Cons<Variant<Name, Idx, Flavour, Fields>, Tail>
 where
     Name: HasName,
@@ -63,8 +57,7 @@ where
     Flavour: VariantFlavour,
     Fields: FieldsProduct,
     Variant<Name, Idx, Flavour, Fields>: DeserializeVariant<'de>,
-    Parent: DataType,
-    Tail: DeserializeVariants<'de, Parent, TopVariants>,
+    Tail: DeserializeVariants<'de, TopVariants>,
     TopVariants: VariantsProduct,
 {
     fn deserialize_variant<A: VariantAccess<'de>>(
@@ -95,7 +88,7 @@ where
 {
     fn deserialize_variant<A: VariantAccess<'de>>(access: A) -> Result<Self, A::Error> {
         access
-            .tuple_variant(Fields::LEN, TupleFieldsVisitor::<Fields>::new(Name::NAME))
+            .tuple_variant(Fields::LEN, TupleFieldsVisitor::<Name, Fields>::new())
             .map(Variant::new)
     }
 }
@@ -110,7 +103,7 @@ where
 {
     fn deserialize_variant<A: VariantAccess<'de>>(access: A) -> Result<Self, A::Error> {
         access
-            .struct_variant(Names::NAMES, StructFieldsVisitor::<Fields>::new(Name::NAME))
+            .struct_variant(Names::NAMES, StructFieldsVisitor::<Name, Fields>::new())
             .map(Variant::new)
     }
 }
@@ -126,7 +119,7 @@ where
     }
 }
 
-pub trait SerializeVariants<Parent: DataType>: VariantsProduct + Sized {
+pub trait SerializeVariants: VariantsProduct + Sized {
     fn eager_handlers<'a, S: Serializer>(
         serializer: &RefCell<Option<S>>,
     ) -> impl ReducerRef<'a, Self, Result<S::Ok, S::Error>>
@@ -134,7 +127,7 @@ pub trait SerializeVariants<Parent: DataType>: VariantsProduct + Sized {
         Self: 'a;
 }
 
-impl<Parent: DataType> SerializeVariants<Parent> for Nil {
+impl SerializeVariants for Nil {
     #[inline]
     fn eager_handlers<'a, S: Serializer>(
         _serializer: &RefCell<Option<S>>,
@@ -146,11 +139,10 @@ impl<Parent: DataType> SerializeVariants<Parent> for Nil {
     }
 }
 
-impl<Variant, Parent, Tail> SerializeVariants<Parent> for Cons<Variant, Tail>
+impl<Variant, Tail> SerializeVariants for Cons<Variant, Tail>
 where
-    Variant: SerializeVariant<Parent>,
-    Parent: DataType,
-    Tail: SerializeVariants<Parent>,
+    Variant: SerializeVariant,
+    Tail: SerializeVariants,
     Self: VariantsProduct,
 {
     #[inline]
@@ -172,21 +164,19 @@ where
     }
 }
 
-pub trait SerializeVariant<Parent: DataType> {
+pub trait SerializeVariant {
     fn serialize_variant<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error>;
 }
 
-impl<Name, Idx, Fields, Parent> SerializeVariant<Parent>
-    for Variant<Name, Idx, TupleVariant, Fields>
+impl<Name, Idx, Fields> SerializeVariant for Variant<Name, Idx, TupleVariant, Fields>
 where
     Name: HasName,
     Idx: Num,
     Fields: SerializeTupleVariantFields,
-    Parent: DataType,
 {
     fn serialize_variant<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let serializer = serializer.serialize_tuple_variant(
-            Parent::TYPE_NAME,
+            Name::NAME,
             Idx::NUM as u32,
             Name::NAME,
             Fields::LEN,
@@ -195,18 +185,16 @@ where
     }
 }
 
-impl<Name, Idx, Names, Fields, Parent> SerializeVariant<Parent>
-    for Variant<Name, Idx, StructVariant<Names>, Fields>
+impl<Name, Idx, Names, Fields> SerializeVariant for Variant<Name, Idx, StructVariant<Names>, Fields>
 where
     Name: HasName,
     Idx: Num,
     Names: HasNames,
     Fields: SerializeStructVariantFields,
-    Parent: DataType,
 {
     fn serialize_variant<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let serializer = serializer.serialize_struct_variant(
-            Parent::TYPE_NAME,
+            Name::NAME,
             Idx::NUM as u32,
             Name::NAME,
             Fields::LEN,
@@ -215,14 +203,13 @@ where
     }
 }
 
-impl<Name, Idx, Parent> SerializeVariant<Parent> for Variant<Name, Idx, UnitVariant, Nil>
+impl<Name, Idx> SerializeVariant for Variant<Name, Idx, UnitVariant, Nil>
 where
     Name: HasName,
     Idx: Num,
-    Parent: DataType,
 {
     fn serialize_variant<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_unit_variant(Parent::TYPE_NAME, Idx::NUM as u32, Name::NAME)
+        serializer.serialize_unit_variant(Name::NAME, Idx::NUM as u32, Name::NAME)
     }
 }
 

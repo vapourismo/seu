@@ -26,7 +26,7 @@ impl<'a, T: DataType + 'a> SerializeViaSeu<'a, T> {
 impl<'a, T> Serialize for SerializeViaSeu<'a, T>
 where
     T: DataType,
-    <T as DataType>::ReprRef<'a>: SerializeRepr<T>,
+    <T as DataType>::ReprRef<'a>: SerializeRepr,
 {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         self.0.serialize_repr(serializer)
@@ -44,7 +44,7 @@ impl<T: DataType> DeserializeViaSeu<T> {
 impl<'de, T> Deserialize<'de> for DeserializeViaSeu<T>
 where
     T: DataType,
-    <T as DataType>::Repr: DeserializeRepr<'de, T>,
+    <T as DataType>::Repr: DeserializeRepr<'de>,
 {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         T::Repr::deserialize_repr(deserializer).map(Self)

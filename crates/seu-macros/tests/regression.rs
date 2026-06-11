@@ -65,27 +65,28 @@ fn main() {
     #[derive(DataType)]
     struct UnitStruct;
 
-    assert_repr!(UnitStruct, Struct<UnitVariant, Product![]>);
-    assert_repr_ref!(UnitStruct, Struct<UnitVariant, Product![]>);
-    assert_repr_mut!(UnitStruct, Struct<UnitVariant, Product![]>);
+    assert_repr!(UnitStruct, Struct<_, UnitVariant, Product![]>);
+    assert_repr_ref!(UnitStruct, Struct<_, UnitVariant, Product![]>);
+    assert_repr_mut!(UnitStruct, Struct<_, UnitVariant, Product![]>);
 
     #[derive(DataType)]
     struct EmptyTupleStruct();
 
-    assert_repr!(EmptyTupleStruct, Struct<TupleVariant, Product![]>);
-    assert_repr_ref!(EmptyTupleStruct, Struct<TupleVariant, Product![]>);
-    assert_repr_mut!(EmptyTupleStruct, Struct<TupleVariant, Product![]>);
+    assert_repr!(EmptyTupleStruct, Struct<_, TupleVariant, Product![]>);
+    assert_repr_ref!(EmptyTupleStruct, Struct<_, TupleVariant, Product![]>);
+    assert_repr_mut!(EmptyTupleStruct, Struct<_, TupleVariant, Product![]>);
 
     #[derive(DataType)]
     struct TupleStruct(u8, bool);
 
     assert_repr!(
         TupleStruct,
-        Struct<TupleVariant, Product![Field<Unnamed, u8>, Field<Unnamed, bool>]>
+        Struct<_, TupleVariant, Product![Field<Unnamed, u8>, Field<Unnamed, bool>]>
     );
     assert_repr_ref!(
         TupleStruct,
         Struct<
+            _,
             TupleVariant,
             Product![Field<Unnamed, &'static u8>, Field<Unnamed, &'static bool>]
         >
@@ -93,6 +94,7 @@ fn main() {
     assert_repr_mut!(
         TupleStruct,
         Struct<
+            _,
             TupleVariant,
             Product![
                 Field<Unnamed, &'static mut u8>,
@@ -104,9 +106,9 @@ fn main() {
     #[derive(DataType)]
     struct EmptyNamedStruct {}
 
-    assert_repr!(EmptyNamedStruct, Struct<StructVariant<_>, Product![]>);
-    assert_repr_ref!(EmptyNamedStruct, Struct<StructVariant<_>, Product![]>);
-    assert_repr_mut!(EmptyNamedStruct, Struct<StructVariant<_>, Product![]>);
+    assert_repr!(EmptyNamedStruct, Struct<_, StructVariant<_>, Product![]>);
+    assert_repr_ref!(EmptyNamedStruct, Struct<_, StructVariant<_>, Product![]>);
+    assert_repr_mut!(EmptyNamedStruct, Struct<_, StructVariant<_>, Product![]>);
 
     #[derive(DataType)]
     struct NamedStruct {
@@ -116,11 +118,12 @@ fn main() {
 
     assert_repr!(
         NamedStruct,
-        Struct<StructVariant<_>, Product![Field<_, u8>, Field<_, bool>]>
+        Struct<_, StructVariant<_>, Product![Field<_, u8>, Field<_, bool>]>
     );
     assert_repr_ref!(
         NamedStruct,
         Struct<
+            _,
             StructVariant<_>,
             Product![Field<Named<_>, &'static u8>, Field<Named<_>, &'static bool>],
         >
@@ -128,6 +131,7 @@ fn main() {
     assert_repr_mut!(
         NamedStruct,
         Struct<
+            _,
             StructVariant<_>,
             Product![
                 Field<Named<_>, &'static mut u8>,
@@ -139,9 +143,9 @@ fn main() {
     #[derive(DataType)]
     enum EmptyEnum {}
 
-    assert_repr!(EmptyEnum, Enum<_, Product![]>);
-    assert_repr_ref!(EmptyEnum, Enum<_, Product![]>);
-    assert_repr_mut!(EmptyEnum, Enum<_, Product![]>);
+    assert_repr!(EmptyEnum, Enum<_, _, Product![]>);
+    assert_repr_ref!(EmptyEnum, Enum<_, _, Product![]>);
+    assert_repr_mut!(EmptyEnum, Enum<_, _, Product![]>);
 
     #[derive(DataType)]
     enum UnitEnum {
@@ -150,15 +154,15 @@ fn main() {
 
     assert_repr!(
         UnitEnum,
-        Enum<_, Product![Variant<_, Num!(0), UnitVariant, Product![]>]>
+        Enum<_, _, Product![Variant<_, Num!(0), UnitVariant, Product![]>]>
     );
     assert_repr_ref!(
         UnitEnum,
-        Enum<_, Product![Variant<_, Num!(0), UnitVariant, Product![]>]>
+        Enum<_, _, Product![Variant<_, Num!(0), UnitVariant, Product![]>]>
     );
     assert_repr_mut!(
         UnitEnum,
-        Enum<_, Product![Variant<_, Num!(0), UnitVariant, Product![]>]>
+        Enum<_, _, Product![Variant<_, Num!(0), UnitVariant, Product![]>]>
     );
 
     #[derive(DataType)]
@@ -170,6 +174,7 @@ fn main() {
     assert_repr!(
         TupleEnum,
         Enum<
+            _,
             _,
             Product![
                 Variant<_, Num!(0), TupleVariant, Product![]>,
@@ -186,6 +191,7 @@ fn main() {
         TupleEnum,
         Enum<
             _,
+            _,
             Product![
                 Variant<_, Num!(0), TupleVariant, Product![]>,
                 Variant<
@@ -200,6 +206,7 @@ fn main() {
     assert_repr_mut!(
         TupleEnum,
         Enum<
+            _,
             _,
             Product![
                 Variant<_, Num!(0), TupleVariant, Product![]>,
@@ -226,6 +233,7 @@ fn main() {
         StructEnum,
         Enum<
             _,
+            _,
             Product![
                 Variant<_, Num!(0), StructVariant<_>, Product![]>,
                 Variant<
@@ -241,6 +249,7 @@ fn main() {
         StructEnum,
         Enum<
             _,
+            _,
             Product![
                 Variant<_, Num!(0), StructVariant<_>, Product![]>,
                 Variant<
@@ -255,6 +264,7 @@ fn main() {
     assert_repr_mut!(
         StructEnum,
         Enum<
+            _,
             _,
             Product![
                 Variant<_, Num!(0), StructVariant<_>, Product![]>,
@@ -284,6 +294,7 @@ fn main() {
         EnumShapes,
         Enum<
             _,
+            _,
             Product![
                 Variant<_, Num!(0), UnitVariant, Product![]>,
                 Variant<_, Num!(1), TupleVariant, Product![]>,
@@ -307,6 +318,7 @@ fn main() {
         EnumShapes,
         Enum<
             _,
+            _,
             Product![
                 Variant<_, Num!(0), UnitVariant, Product![]>,
                 Variant<_, Num!(1), TupleVariant, Product![]>,
@@ -329,6 +341,7 @@ fn main() {
     assert_repr_mut!(
         EnumShapes,
         Enum<
+            _,
             _,
             Product![
                 Variant<_, Num!(0), UnitVariant, Product![]>,

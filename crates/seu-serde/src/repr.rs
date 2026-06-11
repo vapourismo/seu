@@ -6,8 +6,8 @@ use serde::Deserializer;
 use serde::Serializer;
 use serde::de::EnumAccess;
 use serde::de::Visitor;
-use seu_core::datatypes::DataType;
 use seu_core::enums::Enum;
+use seu_core::names::HasName;
 use seu_core::names::HasNames;
 use seu_core::product::Nil;
 use seu_core::structs::Struct;
@@ -25,19 +25,19 @@ use crate::variants::DeserializeVariants;
 use crate::variants::SerializeVariants;
 use crate::variants::VariantIdx;
 
-pub trait SerializeRepr<Parent: DataType> {
+pub trait SerializeRepr {
     fn serialize_repr<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error>;
 }
 
-pub trait DeserializeRepr<'de, Parent: DataType>: Sized {
+pub trait DeserializeRepr<'de>: Sized {
     fn deserialize_repr<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error>;
 }
 
-impl<Parent, VariantNames, Variants> SerializeRepr<Parent> for Enum<VariantNames, Variants>
+impl<Name, VariantNames, Variants> SerializeRepr for Enum<Name, VariantNames, Variants>
 where
-    Parent: DataType,
+    Name: HasName,
     VariantNames: HasNames,
-    Variants: SerializeVariants<Parent>,
+    Variants: SerializeVariants,
 {
     fn serialize_repr<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let serializer = RefCell::new(Some(serializer));
@@ -46,31 +46,29 @@ where
     }
 }
 
-impl<'de, Parent, VariantNames, Variants> DeserializeRepr<'de, Parent>
-    for Enum<VariantNames, Variants>
+impl<'de, Name, VariantNames, Variants> DeserializeRepr<'de> for Enum<Name, VariantNames, Variants>
 where
-    Parent: DataType,
+    Name: HasName,
     VariantNames: HasNames,
-    Variants: DeserializeVariants<'de, Parent, Variants>,
+    Variants: DeserializeVariants<'de, Variants>,
 {
     fn deserialize_repr<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        struct EnumVisitor<Parent, VariantNames, Variants>(
-            PhantomData<Parent>,
+        struct EnumVisitor<Name, VariantNames, Variants>(
+            PhantomData<Name>,
             PhantomData<VariantNames>,
             PhantomData<Variants>,
         );
 
-        impl<'de, Parent, VariantNames, Variants> Visitor<'de>
-            for EnumVisitor<Parent, VariantNames, Variants>
+        impl<'de, Name, VariantNames, Variants> Visitor<'de> for EnumVisitor<Name, VariantNames, Variants>
         where
-            Parent: DataType,
+            Name: HasName,
             VariantNames: HasNames,
-            Variants: DeserializeVariants<'de, Parent, Variants>,
+            Variants: DeserializeVariants<'de, Variants>,
         {
-            type Value = Enum<VariantNames, Variants>;
+            type Value = Enum<Name, VariantNames, Variants>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                formatter.write_str(Parent::TYPE_NAME)
+                formatter.write_str(Name::NAME)
             }
 
             fn visit_enum<A: EnumAccess<'de>>(self, data: A) -> Result<Self::Value, A::Error> {
@@ -80,85 +78,85 @@ where
         }
 
         deserializer.deserialize_enum(
-            Parent::TYPE_NAME,
+            Name::NAME,
             VariantNames::NAMES,
-            EnumVisitor::<Parent, VariantNames, Variants>(PhantomData, PhantomData, PhantomData),
+            EnumVisitor::<Name, VariantNames, Variants>(PhantomData, PhantomData, PhantomData),
         )
     }
 }
 
-impl<Parent, Fields> SerializeRepr<Parent> for Struct<TupleVariant, Fields>
+impl<Name, Fields> SerializeRepr for Struct<Name, TupleVariant, Fields>
 where
-    Parent: DataType,
+    Name: HasName,
     Fields: SerializeTupleStructFields,
 {
     fn serialize_repr<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let serializer = serializer.serialize_tuple_struct(Parent::TYPE_NAME, Fields::LEN)?;
+        let serializer = serializer.serialize_tuple_struct(Name::NAME, Fields::LEN)?;
         self.fields.serialize_tuple_struct_fields(serializer)
     }
 }
 
-impl<'de, Parent, Fields> DeserializeRepr<'de, Parent> for Struct<TupleVariant, Fields>
+impl<'de, Name, Fields> DeserializeRepr<'de> for Struct<Name, TupleVariant, Fields>
 where
-    Parent: DataType,
+    Name: HasName,
     Fields: DeserializeTupleFields<'de>,
 {
     fn deserialize_repr<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         deserializer
             .deserialize_tuple_struct(
-                Parent::TYPE_NAME,
+                Name::NAME,
                 Fields::LEN,
-                TupleFieldsVisitor::<Fields>::new(Parent::TYPE_NAME),
+                TupleFieldsVisitor::<Name, Fields>::new(),
             )
             .map(Struct::new)
     }
 }
 
-impl<Parent, Names, Fields> SerializeRepr<Parent> for Struct<StructVariant<Names>, Fields>
+impl<Name, FieldNames, Fields> SerializeRepr for Struct<Name, StructVariant<FieldNames>, Fields>
 where
-    Parent: DataType,
-    Names: HasNames,
+    Name: HasName,
+    FieldNames: HasNames,
     Fields: SerializeStructFields,
 {
     fn serialize_repr<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let serializer = serializer.serialize_struct(Parent::TYPE_NAME, Fields::LEN)?;
+        let serializer = serializer.serialize_struct(Name::NAME, Fields::LEN)?;
         self.fields.serialize_struct_fields(serializer)
     }
 }
 
-impl<'de, Parent, Names, Fields> DeserializeRepr<'de, Parent>
-    for Struct<StructVariant<Names>, Fields>
+impl<'de, Name, FieldNames, Fields> DeserializeRepr<'de>
+    for Struct<Name, StructVariant<FieldNames>, Fields>
 where
-    Parent: DataType,
-    Names: HasNames,
+    Name: HasName,
+    FieldNames: HasNames,
     Fields: DeserializeStructFields<'de>,
 {
     fn deserialize_repr<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         deserializer
             .deserialize_struct(
-                Parent::TYPE_NAME,
-                Names::NAMES,
-                StructFieldsVisitor::<Fields>::new(Parent::TYPE_NAME),
+                Name::NAME,
+                FieldNames::NAMES,
+                StructFieldsVisitor::<Name, Fields>::new(),
             )
             .map(Struct::new)
     }
 }
 
-impl<Parent: DataType> SerializeRepr<Parent> for Struct<UnitVariant, Nil> {
+impl<Name: HasName> SerializeRepr for Struct<Name, UnitVariant, Nil> {
     fn serialize_repr<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_unit_struct(Parent::TYPE_NAME)
+        serializer.serialize_unit_struct(Name::NAME)
     }
 }
 
-impl<'de, Parent: DataType> DeserializeRepr<'de, Parent> for Struct<UnitVariant, Nil> {
+impl<'de, Name: HasName> DeserializeRepr<'de> for Struct<Name, UnitVariant, Nil> {
     fn deserialize_repr<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        struct UnitStructVisitor<Parent: DataType>(PhantomData<Parent>);
+        struct UnitStructVisitor<Name: HasName>(PhantomData<Name>);
 
-        impl<'de, Parent: DataType> Visitor<'de> for UnitStructVisitor<Parent> {
-            type Value = Struct<UnitVariant, Nil>;
+        impl<'de, Name: HasName> Visitor<'de> for UnitStructVisitor<Name> {
+            type Value = Struct<Name, UnitVariant, Nil>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                formatter.write_str(Parent::TYPE_NAME)
+                formatter.write_str(Name::NAME)
             }
 
             fn visit_unit<E: serde::de::Error>(self) -> Result<Self::Value, E> {
@@ -166,7 +164,6 @@ impl<'de, Parent: DataType> DeserializeRepr<'de, Parent> for Struct<UnitVariant,
             }
         }
 
-        deserializer
-            .deserialize_unit_struct(Parent::TYPE_NAME, UnitStructVisitor::<Parent>(PhantomData))
+        deserializer.deserialize_unit_struct(Name::NAME, UnitStructVisitor::<Name>(PhantomData))
     }
 }
