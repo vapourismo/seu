@@ -1,6 +1,6 @@
 export default {
     extends: ['@commitlint/config-conventional'],
     ignores: [
-        (message) => /^build\(deps(?:-dev)?\):/.test(message)
+        (message) => /^(build|chore)\(deps(?:-dev)?\):/.test(message)
     ]
 };
